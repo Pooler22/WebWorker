@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <style type="text/css">
+        body {
+            margin: 0;
+            height: 100%;
+            background-color: #F5F5F5;
+        }
+    </style>
+
+    <script type="text/javascript">
+        var isStorageSupported = false;
+        var isFileAPISupported = false;
+        var circlesNumber = 1000;
+
+        var worker;
+        var workerNext;
+
+        function init() {
+            worker = new Worker("kod_3.js");
+            workerNext = new Worker("kod_4.js");
+            console.log("Document initialized properly");
+
+            //LocalStorage
+            if (!("localStorage" in window && window["localStorage"] != null)) {
+                window.alert("This browser doesn't support local storage");
+            } else {
+                isStorageSupported = true;
+            }
+
+            //File API
+            if (window.File && window.FileReader && window.FileList) {
+                isFileAPISupported = true
+            } else {
+                window.alert("This browser doesn't support File API");
+            }
+
+            useFileAPI();
+        }
+
+        function useFileAPI() {
+            document.getElementById("picker").addEventListener("change", onFileSelected, false);
+
+            function onFileSelected(e) {
+                var file = e.target.files[0];
+                // masking for filetype.image
+                if (!file.type.match("image.*")) {
+                    alert("\"" + file.name + "\" is not an image file");
+                    return;
+                }
+                console.log(e.target.files[0].naturalHeight)
+                console.log("Dane obrazka przez file picker: " + "name: " + file.name + "; type: " + file.type + "; size: " + file.size + "; timeStamp: " + file.lastModifiedDate);
+                worker.postMessage(file); // Send data to our worker.
+                worker.addEventListener('message', messageFromWorker, false);
+                var canvas = document.getElementById("image");
+                var ctx = canvas.getContext("2d");
+                var img;
+
+                function messageFromWorker(e) {
+
+                    img = new Image();
+                    img.onload = function() {
+                        //get canvas
+
+
+                        //draw Image
+                        console.log(img);
+                        ctx.drawImage(img, 0, 0);
+                    }
+                    img.src = e.data;
+                    var tmp = [];
+                    tmp.width = img.width;
+                    tmp.height = img.height;
+                    tmp.n = circlesNumber;
+                    // console.log(img.width + img.height)
+
+                    workerNext.postMessage(tmp);
+                    workerNext.addEventListener('message', messageFromWorkerNext, false);
+
+                    function messageFromWorkerNext(e) {
+
+                        // var canvas = document.getElementById("image");
+                        // var ctx = canvas.getContext("2d");
+                        //                        console.log(e.data);
+                        for (let value in e.data) {
+                            ctx.beginPath();
+                            ctx.arc(e.data[value].x, e.data[value].y, e.data[value].r, 0, 2 * Math.PI);
+                            ctx.fillStyle = "rgba(255, 255, 155, 0.1)";
+                            ctx.fill();
+                            ctx.stroke();
+
+                        }
+                        //ctx.drawImage(img, 0, 0);
+                    }
+                }
+            }
+        }
+
+        window.addEventListener("load", init, false);
+    </script>
+    <style type="text/css">
+         :root .ad {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <canvas id="image" width="800" height="600" style="border:1px solid #000000;"></canvas>
+        <label for="picker" style="margin-left: 8px; margin-right: 8px">Select files</label>
+        <input type="file" id="picker" multiple="" style="width: 320px">
+    </header>
+</body>
+
+</html>

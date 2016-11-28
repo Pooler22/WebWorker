@@ -1,0 +1,201 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Paint!</title>
+</head>
+
+<body>
+    <canvas id=canvas width=800 height=600 style="border: 2px solid #333; touch-action: auto"></canvas>
+    <label for="picker" style="margin-left: 8px; margin-right: 8px">Select files</label>
+    <input type="file" id="picker" style="width: 320px" />
+    <script type='text/javascript'>
+        var isStorageSupported = false;
+        var isFileAPISupported = false;
+        var drag = false
+
+        function init() {
+            console.log("Document initialized properly");
+
+            //LocalStorage
+            if (!("localStorage" in window && window["localStorage"] != null)) {
+                window.alert("This browser doesn't support local storage");
+            } else {
+                isStorageSupported = true;
+            }
+
+            //File API
+            if (window.File && window.FileReader && window.FileList) {
+                isFileAPISupported = true
+            } else {
+                window.alert("This browser doesn't support File API");
+            }
+
+            useFileAPIandDragDrop();
+
+
+        }
+
+        function useFileAPIandDragDrop() {
+            document.getElementById("picker").addEventListener("change", onFileSelected, false);
+
+            document.addEventListener("dragover", onDragOver, false);
+            document.addEventListener("drop", onDrop, false);
+
+
+            //Common FileReader
+            var reader = new FileReader();
+
+            //handle onload
+            reader.onload = function(e) {
+
+
+                //get canvas
+                var canvas = document.getElementById("canvas");
+                var ctx = canvas.getContext("2d");
+
+                //create Image object
+                var img = new Image();
+
+                img.src = e.target.result;
+
+
+                img.onload = function() {
+
+                    //draw Image
+                    var steps = Math.ceil(Math.log(img.width / canvas.width) / Math.log(2));
+                    console.log(steps);
+
+                    if (steps < 2) {
+                        ctx.drawImage(img, 0, 0);
+                    } else {
+                        var offscreenCanvas = document.createElement('canvas');
+                        var offscreenCanvasCtx = offscreenCanvas.getContext('2d');
+                        offscreenCanvas.width = img.width * 0.5;
+                        offscreenCanvas.height = img.height * 0.5;
+                        offscreenCanvasCtx.drawImage(img, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
+
+
+                        offscreenCanvasCtx.drawImage(offscreenCanvas, 0, 0, offscreenCanvas.width * 0.5, offscreenCanvas.height * 0.5);
+
+                        ctx.drawImage(offscreenCanvas, 0, 0, offscreenCanvas.width * 0.5, offscreenCanvas.height * 0.5, 0, 0, canvas.width, canvas.height);
+
+
+                    }
+                    // for (i = 0; i < 10; i++) {
+                    //     if (drag) {
+                    //         ctx.beginPath();
+                    //         ctx.fillStyle = "yellow";
+                    //         ctx.arc(getRandomArbitrary(0, 400), getRandomArbitrary(0, 400), 25, 2 * Math.PI, false);
+                    //         ctx.fill();
+                    //         ctx.closePath();
+                    //     }
+                    // }
+                }
+
+            }
+
+            function getRandomArbitrary(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            reader.onerror = function(e) {
+                console.log("There was an error reading files");
+                console.log(e.error);
+            }
+
+            reader.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    console.log("Loaded " + e.loaded + " out of " + e.total);
+                }
+            }
+
+
+            function onFileSelected(e) {
+                drag = false;
+                var file = e.target.files[0];
+
+                // masking for filetype.image
+                if (!file.type.match("image.*")) {
+                    alert("\"" + file.name + "\" is not an image file");
+                    return;
+                }
+
+                console.log("Dane obrazka przez file picker: " + "name: " + file.name + "; type: " + file.type + "; size: " + file.size + "; timeStamp: " + file.lastModifiedDate);
+
+                // Read the contents of the image file as a data URL
+                reader.readAsDataURL(file);
+            }
+
+            //Drag & Drop Handling
+            function onDragOver(e) {
+                console.log("Something was dragged over page");
+                //e.stopPropagation();
+                e.preventDefault();
+            }
+
+            function onDrop(e) {
+                drag = true;
+                //e.stopPropagation();
+                e.preventDefault();
+                var file = e.dataTransfer.files[0];
+
+                // masking for filetype.image
+                if (!file.type.match("image.*")) {
+                    alert("\"" + file.name + "\" is not an image file");
+                    return;
+                }
+
+                console.log("Dane obrazka przez drag&drop: " + "name: " + file.name + "; type: " + file.type + "; size: " + file.size + "; timeStamp: " + file.lastModifiedDate);
+
+                // Read the contents of the image file as a data URL
+                reader.readAsDataURL(file);
+            }
+
+        }
+
+        window.addEventListener("load", init, false);
+        var canvas = document.getElementById("canvas");
+        var context = canvas.getContext("2d");
+        var points;
+        context.lineJoin = "round";
+        context.lineCap = "round";
+        canvas.addEventListener("mousedown", startPaint);
+        canvas.addEventListener("mousemove", paint);
+
+        function startPaint(event) {
+            //Set up a running list of points
+            points = [{
+                x: event.offsetX,
+                y: event.offsetY
+            }];
+        }
+
+        function paint(event) {
+            if (event.buttons > 0) {
+                event.preventDefault();
+                //Add newest point
+                points.push({
+                    x: event.offsetX,
+                    y: event.offsetY
+                });
+
+                //Create path
+                context.beginPath();
+                context.moveTo(points[0].x, points[0].y);
+                context.lineTo(points[1].x, points[1].y);
+
+                //Stroke path
+                context.lineWidth = 4;
+                context.strokeStyle = 'black';
+                context.stroke();
+                context.closePath();
+
+                //Shift out oldest point
+                points.shift();
+            }
+        }
+    </script>
+</body>
+
+</html>
