@@ -23,36 +23,32 @@
         document.getElementById("blackwhite").addEventListener("click", function() {
             var canvas = document.getElementById("canvas");
             var ctx = canvas.getContext("2d");
-            var imgd = context.getImageData(0, 0, 500, 500);
-            var pix = imgd.data;
+            var imgd = context.getImageData(0, 0, 500, 500).data;
 
-            workerBW.postMessage(pix); // Send data to our worker.
+            workerBW.postMessage(imgd); // Send data to our worker.
             workerBW.addEventListener('message', messageFromWorkerBW, false);
+            var imageData = context.createImageData(500, 500);
 
             function messageFromWorkerBW(e) {
-                //console.log("working")
-                //var imagedata = ctx.getImageData(0,0,500,500);
-                //imagedata.data = e.data;
-                //console.log(imagedata)
-                //ctx.putImageData(imagedata.data, 0, 0);
+                var arr = new Uint8ClampedArray(e.data);
+                var idata = new ImageData(arr, 500, 500);
+                ctx.putImageData(idata, 0, 0);
             }
-
-
         });
-
 
         document.getElementById("invert").addEventListener("click", function() {
             var canvas = document.getElementById("canvas");
             var ctx = canvas.getContext("2d");
-            var imgd = context.getImageData(0, 0, 500, 500);
-            var pix = imgd.data;
+            var imgd = context.getImageData(0, 0, 500, 500).data;
 
-            workerI.postMessage(pix); // Send data to our worker.
+            workerI.postMessage(imgd); // Send data to our worker.
             workerI.addEventListener('message', messageFromWorkerI, false);
+            var imageData = context.createImageData(500, 500);
 
             function messageFromWorkerI(e) {
-              // console.log("working")
-              ctx.putImageData(e, 0, 0);
+              var arr = new Uint8ClampedArray(e.data);
+              var idata = new ImageData(arr, 500, 500);
+              ctx.putImageData(idata, 0, 0);
             }
 
 
