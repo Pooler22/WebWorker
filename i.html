@@ -8,24 +8,22 @@
 <body>
     <canvas id=canvas width=500 height=500 style="border: 2px solid #333; touch-action: auto"></canvas>
     <div id="info"></div>
-    <label for="picker" style="margin-left: 8px; margin-right: 8px">Select files</label>
+    <label for="picker">Select files</label>
     <button id="blackwhite">Black-white filter</button>
     <button id="invert">Invert filter</button>
-    <input type="file" id="picker" style="width: 320px" />
+    <input type="file" id="picker" />
     <script type='text/javascript'>
         var isStorageSupported = false;
         var isFileAPISupported = false;
         var drag = false
-
         var workerBW = new Worker("blackwhite.js");
         var workerI = new Worker("invert.js");
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
 
         document.getElementById("blackwhite").addEventListener("click", function() {
-            var canvas = document.getElementById("canvas");
-            var ctx = canvas.getContext("2d");
             var imgd = context.getImageData(0, 0, 500, 500).data;
-
-            workerBW.postMessage(imgd); // Send data to our worker.
+            workerBW.postMessage(imgd);
             workerBW.addEventListener('message', messageFromWorkerBW, false);
             var imageData = context.createImageData(500, 500);
 
@@ -37,22 +35,16 @@
         });
 
         document.getElementById("invert").addEventListener("click", function() {
-            var canvas = document.getElementById("canvas");
-            var ctx = canvas.getContext("2d");
             var imgd = context.getImageData(0, 0, 500, 500).data;
-
-            workerI.postMessage(imgd); // Send data to our worker.
+            workerI.postMessage(imgd);
             workerI.addEventListener('message', messageFromWorkerI, false);
             var imageData = context.createImageData(500, 500);
 
             function messageFromWorkerI(e) {
-              var arr = new Uint8ClampedArray(e.data);
-              var idata = new ImageData(arr, 500, 500);
-              ctx.putImageData(idata, 0, 0);
+                var arr = new Uint8ClampedArray(e.data);
+                var idata = new ImageData(arr, 500, 500);
+                ctx.putImageData(idata, 0, 0);
             }
-
-
-
         });
 
         function init() {
@@ -76,8 +68,6 @@
             }
 
             useFileAPIandDragDrop();
-
-
         }
 
         function useFileAPIandDragDrop() {
@@ -123,24 +113,8 @@
                         offscreenCanvasCtx.drawImage(offscreenCanvas, 0, 0, offscreenCanvas.width * 0.5, offscreenCanvas.height * 0.5);
 
                         ctx.drawImage(offscreenCanvas, 0, 0, offscreenCanvas.width * 0.5, offscreenCanvas.height * 0.5, 0, 0, canvas.width, canvas.height);
-
-
                     }
-                    // for (i = 0; i < 10; i++) {
-                    //     if (drag) {
-                    //         ctx.beginPath();
-                    //         ctx.fillStyle = "yellow";
-                    //         ctx.arc(getRandomArbitrary(0, 400), getRandomArbitrary(0, 400), 25, 2 * Math.PI, false);
-                    //         ctx.fill();
-                    //         ctx.closePath();
-                    //     }
-                    // }
                 }
-
-            }
-
-            function getRandomArbitrary(min, max) {
-                return Math.random() * (max - min) + min;
             }
 
             reader.onerror = function(e) {
@@ -180,19 +154,15 @@
 
             function onDrop(e) {
                 drag = true;
-                //e.stopPropagation();
                 e.preventDefault();
                 var file = e.dataTransfer.files[0];
 
-                // masking for filetype.image
                 if (!file.type.match("image.*")) {
                     alert("\"" + file.name + "\" is not an image file");
                     return;
                 }
 
                 document.getElementById("info").innerHTML = ("Dane obrazka przez drag&drop: " + "name: " + file.name + "; type: " + file.type + "; size: " + file.size + "; timeStamp: " + file.lastModifiedDate);
-
-                // Read the contents of the image file as a data URL
                 reader.readAsDataURL(file);
             }
 
@@ -208,7 +178,6 @@
         canvas.addEventListener("mousemove", paint);
 
         function startPaint(event) {
-            //Set up a running list of points
             points = [{
                 x: event.offsetX,
                 y: event.offsetY
@@ -218,24 +187,17 @@
         function paint(event) {
             if (event.buttons > 0) {
                 event.preventDefault();
-                //Add newest point
                 points.push({
                     x: event.offsetX,
                     y: event.offsetY
                 });
-
-                //Create path
                 context.beginPath();
                 context.moveTo(points[0].x, points[0].y);
                 context.lineTo(points[1].x, points[1].y);
-
-                //Stroke path
                 context.lineWidth = 4;
-                context.strokeStyle = 'black';
+                context.strokeStyle = 'green';
                 context.stroke();
                 context.closePath();
-
-                //Shift out oldest point
                 points.shift();
             }
         }
