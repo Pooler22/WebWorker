@@ -6,19 +6,63 @@
 </head>
 
 <body>
-    <canvas id=canvas width=800 height=600 style="border: 2px solid #333; touch-action: auto"></canvas>
+    <canvas id=canvas width=500 height=500 style="border: 2px solid #333; touch-action: auto"></canvas>
     <div id="info"></div>
     <label for="picker" style="margin-left: 8px; margin-right: 8px">Select files</label>
+    <button id="blackwhite">Black-white filter</button>
+    <button id="invert">Invert filter</button>
     <input type="file" id="picker" style="width: 320px" />
     <script type='text/javascript'>
         var isStorageSupported = false;
         var isFileAPISupported = false;
         var drag = false
 
-        var workerNext;
-        workerNext = new Worker("kod_4.js");
+        var workerBW = new Worker("blackwhite.js");
+        var workerI = new Worker("invert.js");
+
+        document.getElementById("blackwhite").addEventListener("click", function() {
+            var canvas = document.getElementById("canvas");
+            var ctx = canvas.getContext("2d");
+            var imgd = context.getImageData(0, 0, 500, 500);
+            var pix = imgd.data;
+
+            workerBW.postMessage(pix); // Send data to our worker.
+            workerBW.addEventListener('message', messageFromWorkerBW, false);
+
+            function messageFromWorkerBW(e) {
+                //console.log("working")
+                //var imagedata = ctx.getImageData(0,0,500,500);
+                //imagedata.data = e.data;
+                //console.log(imagedata)
+                //ctx.putImageData(imagedata.data, 0, 0);
+            }
+
+
+        });
+
+
+        document.getElementById("invert").addEventListener("click", function() {
+            var canvas = document.getElementById("canvas");
+            var ctx = canvas.getContext("2d");
+            var imgd = context.getImageData(0, 0, 500, 500);
+            var pix = imgd.data;
+
+            workerI.postMessage(pix); // Send data to our worker.
+            workerI.addEventListener('message', messageFromWorkerI, false);
+
+            function messageFromWorkerI(e) {
+              // console.log("working")
+              ctx.putImageData(e, 0, 0);
+            }
+
+
+
+        });
 
         function init() {
+
+
+
             console.log("Document initialized properly");
 
             //LocalStorage
