@@ -7,12 +7,16 @@
 
 <body>
     <canvas id=canvas width=800 height=600 style="border: 2px solid #333; touch-action: auto"></canvas>
+    <div id="info"></div>
     <label for="picker" style="margin-left: 8px; margin-right: 8px">Select files</label>
     <input type="file" id="picker" style="width: 320px" />
     <script type='text/javascript'>
         var isStorageSupported = false;
         var isFileAPISupported = false;
         var drag = false
+
+        var workerNext;
+        workerNext = new Worker("kod_4.js");
 
         function init() {
             console.log("Document initialized properly");
@@ -121,7 +125,7 @@
                     return;
                 }
 
-                console.log("Dane obrazka przez file picker: " + "name: " + file.name + "; type: " + file.type + "; size: " + file.size + "; timeStamp: " + file.lastModifiedDate);
+                document.getElementById("info").innerHTML = ("Dane obrazka przez file picker: " + "name: " + file.name + "; type: " + file.type + "; size: " + file.size + "; timeStamp: " + file.lastModifiedDate);
 
                 // Read the contents of the image file as a data URL
                 reader.readAsDataURL(file);
@@ -146,7 +150,7 @@
                     return;
                 }
 
-                console.log("Dane obrazka przez drag&drop: " + "name: " + file.name + "; type: " + file.type + "; size: " + file.size + "; timeStamp: " + file.lastModifiedDate);
+                document.getElementById("info").innerHTML = ("Dane obrazka przez drag&drop: " + "name: " + file.name + "; type: " + file.type + "; size: " + file.size + "; timeStamp: " + file.lastModifiedDate);
 
                 // Read the contents of the image file as a data URL
                 reader.readAsDataURL(file);
